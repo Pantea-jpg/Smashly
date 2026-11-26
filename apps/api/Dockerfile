@@ -7,7 +7,7 @@
 #   migrations         ->  node_modules/.bin/prisma migrate deploy   (Render: preDeployCommand)
 # The `migrate` target is kept for running migrations by hand with plain Docker.
 
-FROM node:24-alpine AS base
+FROM node:26-alpine AS base
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH CI=true
 RUN corepack enable
 WORKDIR /repo
@@ -26,7 +26,7 @@ FROM build AS migrate
 WORKDIR /repo/apps/api
 CMD ["pnpm", "exec", "prisma", "migrate", "deploy"]
 
-FROM node:24-alpine AS runtime
+FROM node:26-alpine AS runtime
 ENV NODE_ENV=production
 # The version reported by /health and Sentry comes from RENDER_GIT_COMMIT on Render, or from
 # an explicit APP_VERSION environment variable elsewhere (see config/env.ts).
