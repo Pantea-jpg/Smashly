@@ -1,0 +1,118 @@
+{
+  "home": {
+    "greeting": "Hoi {{name}}",
+    "balance": "Saldo",
+    "debt": "Openstaand",
+    "topUp": "Opwaarderen",
+    "debtBanner": "Je hebt {{amount}} openstaan. Dit wordt automatisch verrekend bij je volgende opwaardering.",
+    "nextTraining": "Volgende training",
+    "noTraining": "Geen komende trainingen",
+    "recent": "Recente activiteit",
+    "noActivity": "Nog geen transacties",
+    "seeAll": "Alles bekijken",
+    "unread_one": "{{count}} ongelezen melding",
+    "unread_other": "{{count}} ongelezen meldingen",
+    "pushPrompt": {
+      "title": "Ontvang herinneringen en betaalupdates",
+      "body": "We laten je weten wanneer je training eraan komt, wanneer een betaling binnen is en wanneer je saldo laag wordt. Per soort aan te passen in je profiel.",
+      "enable": "Aanzetten",
+      "later": "Niet nu"
+    }
+  },
+  "trainings": {
+    "upcoming": "Komend",
+    "past": "Afgelopen",
+    "empty": "Hier staan nog geen trainingen",
+    "spotsLeft_one": "Nog {{count}} plek",
+    "spotsLeft_other": "Nog {{count}} plekken",
+    "full": "Vol",
+    "unlimited": "Geen limiet",
+    "deadline": "Reageer vóór {{date}}",
+    "deadlinePassed": "Aanmelden is gesloten",
+    "yourPrice": "Jouw prijs",
+    "priceSource": {
+      "TRAINING_DEFAULT": "Standaardprijs",
+      "USER_STANDING_PRICE": "Jouw persoonlijke prijs",
+      "TRAINING_OVERRIDE": "Speciale prijs voor jou"
+    },
+    "attend": "Ik ben erbij",
+    "notAttend": "Ik kan niet",
+    "status": {
+      "ATTENDING": "Aangemeld",
+      "NOT_ATTENDING": "Afgemeld",
+      "none": "Nog niet gereageerd",
+      "CANCELLED": "Geannuleerd"
+    },
+    "attendance": {
+      "PENDING": "Nog niet geregistreerd",
+      "PRESENT": "Aanwezig",
+      "ABSENT": "Afwezig",
+      "EXCUSED": "Afgemeld met reden"
+    },
+    "cancelled": "Geannuleerd: {{reason}}",
+    "charged": "{{amount}} afgeschreven",
+    "chargedWithDebt": "{{amount}} afgeschreven, waarvan {{debt}} openstaat",
+    "chargeReversed": "Afschrijving teruggedraaid",
+    "debtWarning": "Je hebt een openstaand bedrag. Je kunt je nog steeds aanmelden; het wordt verrekend bij je volgende opwaardering.",
+    "saved": "Reactie opgeslagen",
+    "when": "Wanneer",
+    "location": "Locatie",
+    "places": "Plekken",
+    "attendanceTitle": "Aanwezigheid"
+  },
+  "wallet": {
+    "balance": "Saldo",
+    "debt": "Openstaand",
+    "topUp": "Opwaarderen",
+    "verifyToTopUp": "Bevestig je e-mailadres om online op te waarderen.",
+    "openDebts": "Openstaande bedragen",
+    "transactions": "Transacties",
+    "empty": "Nog geen transacties",
+    "reversed": "Teruggedraaid",
+    "type": {
+      "ONLINE_TOP_UP": "Online opwaardering",
+      "CASH_TOP_UP": "Contante betaling",
+      "TRAINING_PAYMENT": "Training",
+      "DEBT_PAYMENT": "Openstaand bedrag betaald",
+      "REFUND": "Terugbetaling",
+      "ADJUSTMENT": "Correctie door beheerder",
+      "REVERSAL": "Correctie"
+    },
+    "method": {
+      "STRIPE": "Kaart, Apple Pay of iDEAL",
+      "CASH": "Contant",
+      "WALLET": "Saldo",
+      "SYSTEM": "Correctie"
+    },
+    "detail": {
+      "amount": "Bedrag",
+      "walletChange": "Wijziging saldo",
+      "debtChange": "Wijziging openstaand",
+      "balanceAfter": "Saldo daarna",
+      "debtAfter": "Openstaand daarna",
+      "method": "Betaalwijze",
+      "date": "Datum",
+      "reason": "Reden",
+      "reversedLater": "Deze boeking is later gecorrigeerd."
+    }
+  },
+  "topUp": {
+    "title": "Opwaarderen",
+    "choose": "Kies een bedrag",
+    "custom": "Ander bedrag (€)",
+    "limits": "Tussen {{min}} en {{max}}",
+    "pay": "{{amount}} betalen",
+    "invalid": "Vul een bedrag in tussen {{min}} en {{max}}",
+    "processing": "Je betaling wordt bevestigd…",
+    "success": "{{amount}} is aan je saldo toegevoegd.",
+    "failed": "De betaling is niet gelukt. Er is geen geld afgeschreven.",
+    "canceled": "Betaling geannuleerd.",
+    "done": "Klaar",
+    "methods": "Betaal met kaart, Apple Pay of iDEAL.",
+    "merchantName": "Training Wallet"
+  },
+  "notifications": {
+    "markAllRead": "Alles als gelezen markeren",
+    "empty": "Nog geen meldingen"
+  }
+}

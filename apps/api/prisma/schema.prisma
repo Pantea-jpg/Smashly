@@ -1,0 +1,768 @@
+// ============================================================================
+// Prisma schema: Training & Wallet Platform
+// Design rationale: docs/03-database.md. Approved 2026-11-24 with default decisions.
+//
+// Conventions
+//   * Money: Int, integer MINOR units (cents). Never Float/Decimal in app code.
+//   * Every money column is paired with a currency (ISO 4217, CHAR(3)).
+//   * IDs: UUIDv7 (time-ordered, index-friendly).
+//   * Timestamps: timestamptz (UTC). Trainings also store an IANA timezone.
+//   * Constraints Prisma cannot express (CHECK constraints, append-only triggers,
+//     role grants) are hand-written SQL at the end of the init migration.
+//   * Enum values must match packages/contracts/src/enums.ts (enforced by a test).
+// ============================================================================
+
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  moduleFormat    = "esm"
+  // partialIndexes: one ACTIVE charge per (training, user); postgresqlExtensions: pg_trgm for search
+  previewFeatures = ["partialIndexes", "postgresqlExtensions"]
+}
+
+// Connection URL is configured in prisma.config.ts (Prisma 7).
+datasource db {
+  provider   = "postgresql"
+  extensions = [pg_trgm]
+}
+
+// ─────────────────────────────── Enums ───────────────────────────────
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum UserStatus {
+  PENDING_APPROVAL // only if "require admin approval" setting is on [D2]
+  ACTIVE
+  INACTIVE // deactivated by admin; cannot log in
+}
+
+enum TrainingStatus {
+  SCHEDULED
+  CANCELLED
+  COMPLETED // set when attendance is finalized
+}
+
+enum ReservationStatus {
+  ATTENDING
+  NOT_ATTENDING
+}
+
+enum AttendanceStatus {
+  PENDING
+  PRESENT
+  ABSENT
+  EXCUSED
+}
+
+enum TransactionType {
+  ONLINE_TOP_UP
+  CASH_TOP_UP
+  TRAINING_PAYMENT
+  DEBT_PAYMENT
+  REFUND
+  ADJUSTMENT
+  REVERSAL
+}
+
+enum PaymentMethod {
+  STRIPE // card / Apple Pay / iDEAL via Stripe
+  CASH
+  WALLET // internal movement (charges, debt settlements)
+  SYSTEM // adjustments, reversals
+}
+
+enum PriceSource {
+  TRAINING_DEFAULT
+  USER_STANDING_PRICE // [D5]
+  TRAINING_OVERRIDE
+}
+
+enum ChargeStatus {
+  ACTIVE
+  REVERSED
+}
+
+enum DebtSource {
+  TRAINING_CHARGE
+  TOP_UP_REVERSAL // [D18]
+}
+
+enum DebtStatus {
+  OPEN
+  SETTLED
+  CANCELLED // by reversal or waiver
+}
+
+enum PaymentProvider {
+  STRIPE
+}
+
+enum PaymentStatus {
+  REQUIRES_PAYMENT
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELED
+  REQUIRES_REVIEW // amount/currency mismatch etc. — never auto-credited
+  PARTIALLY_REFUNDED
+  REFUNDED
+  DISPUTED
+}
+
+enum NotificationType {
+  TRAINING_CREATED
+  TRAINING_UPDATED
+  TRAINING_CANCELLED
+  TRAINING_REMINDER
+  RESERVATION_CONFIRMED
+  ATTENDANCE_RECORDED
+  TRAINING_CHARGED // params include debt shortfall, if any
+  TOP_UP_SUCCEEDED
+  TOP_UP_FAILED
+  CASH_PAYMENT_RECORDED
+  LOW_BALANCE
+  DEBT_REMINDER
+  ATTENDANCE_FINALIZATION_REMINDER // to admins, D13
+}
+
+enum NotificationCategory {
+  TRAININGS
+  PAYMENTS
+  REMINDERS
+}
+
+enum DevicePlatform {
+  IOS
+  ANDROID
+  WEB
+}
+
+enum PushProvider {
+  APNS
+  FCM
+}
+
+enum DeliveryStatus {
+  SENT
+  FAILED
+  SKIPPED // preferences / quiet hours
+}
+
+// ─────────────────────────────── Identity ───────────────────────────────
+
+model User {
+  id           String     @id @default(uuid(7)) @db.Uuid
+  email        String     @unique // stored lower-cased; null-ed out on anonymization
+  passwordHash String     @map("password_hash")
+  role         Role       @default(USER)
+  status       UserStatus @default(ACTIVE)
+  tokenVersion Int        @default(0) @map("token_version") // bump = log out everywhere
+
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamptz
+  lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz // soft delete + PII anonymized
+  anonymizedAt    DateTime? @map("anonymized_at") @db.Timestamptz
+
+  profile                 UserProfile?
+  wallets                 Wallet[]
+  refreshTokens           RefreshToken[]
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  deviceTokens            DeviceToken[]
+  notifications           Notification[]
+  notificationPrefs       NotificationPreference[]
+  reservations            TrainingReservation[]    @relation("ReservationUser")
+  attendances             Attendance[]             @relation("AttendanceUser")
+  priceOverrides          TrainingPriceOverride[]  @relation("OverrideUser")
+  standingPrice           UserStandingPrice?       @relation("StandingPriceUser")
+  trainingCharges         TrainingCharge[]
+  debts                   Debt[]
+  payments                Payment[]
+  transactions            WalletTransaction[]      @relation("TxUser")
+
+  // admin-side relations (actor columns)
+  createdTrainings     Training[]          @relation("TrainingCreatedBy")
+  adminTransactions    WalletTransaction[] @relation("TxAdmin")
+  viewSessionsAsAdmin  ViewSession[]       @relation("ViewSessionAdmin")
+  viewSessionsAsTarget ViewSession[]       @relation("ViewSessionSubject")
+  auditLogs            AuditLog[]
+
+  @@index([role, status])
+  @@index([createdAt])
+  @@index([email(ops: raw("gin_trgm_ops"))], type: Gin, map: "users_email_trgm")
+  @@map("users")
+}
+
+model UserProfile {
+  userId            String  @id @map("user_id") @db.Uuid
+  firstName         String  @map("first_name")
+  lastName          String  @map("last_name")
+  phone             String? // E.164
+  avatarKey         String? @map("avatar_key") // object-storage key, served via signed URL
+  preferredLanguage String  @default("en") @map("preferred_language") // validated against SUPPORTED_LANGUAGES
+  timezone          String  @default("Europe/Amsterdam")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([lastName, firstName])
+  @@index([firstName(ops: raw("gin_trgm_ops"))], type: Gin, map: "user_profiles_first_name_trgm")
+  @@index([lastName(ops: raw("gin_trgm_ops"))], type: Gin, map: "user_profiles_last_name_trgm")
+  @@map("user_profiles")
+}
+
+model RefreshToken {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  familyId     String    @map("family_id") @db.Uuid // all rotations of one login
+  tokenHash    String    @unique @map("token_hash") // SHA-256 of opaque token
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz
+  revokedAt    DateTime? @map("revoked_at") @db.Timestamptz
+  replacedById String?   @unique @map("replaced_by_id") @db.Uuid
+  userAgent    String?   @map("user_agent")
+  ipAddress    String?   @map("ip_address")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user       User          @relation(fields: [userId], references: [id])
+  replacedBy RefreshToken? @relation("Rotation", fields: [replacedById], references: [id])
+  replaces   RefreshToken? @relation("Rotation")
+
+  @@index([userId])
+  @@index([familyId])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz // 30 min
+  usedAt    DateTime? @map("used_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz
+  usedAt    DateTime? @map("used_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("email_verification_tokens")
+}
+
+// Admin "View as User" read-only context. Never an auth credential for the subject.
+model ViewSession {
+  id            String    @id @default(uuid(7)) @db.Uuid
+  adminId       String    @map("admin_id") @db.Uuid
+  subjectUserId String    @map("subject_user_id") @db.Uuid
+  expiresAt     DateTime  @map("expires_at") @db.Timestamptz
+  endedAt       DateTime? @map("ended_at") @db.Timestamptz
+  ipAddress     String?   @map("ip_address")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  admin   User @relation("ViewSessionAdmin", fields: [adminId], references: [id])
+  subject User @relation("ViewSessionSubject", fields: [subjectUserId], references: [id])
+
+  @@index([adminId, createdAt])
+  @@index([subjectUserId])
+  @@map("view_sessions")
+}
+
+// ─────────────────────────────── Wallet & ledger ───────────────────────────────
+
+model Wallet {
+  id           String @id @default(uuid(7)) @db.Uuid
+  userId       String @map("user_id") @db.Uuid
+  currency     String @default("EUR") @db.Char(3)
+  // Cached projections of the ledger. Changed ONLY by the ledger service,
+  // under SELECT ... FOR UPDATE, in the same tx as the ledger row.
+  balanceMinor Int    @default(0) @map("balance_minor") // CHECK >= 0
+  debtMinor    Int    @default(0) @map("debt_minor") // CHECK >= 0
+  sequence     Int    @default(0) // last ledger sequence number
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  user            User                @relation(fields: [userId], references: [id])
+  transactions    WalletTransaction[]
+  debts           Debt[]
+  trainingCharges TrainingCharge[]
+  payments        Payment[]
+
+  @@unique([userId, currency]) // one wallet per user per currency (EUR only for now)
+  @@map("wallets")
+}
+
+// IMMUTABLE ledger. No UPDATE, no DELETE (enforced by DB trigger + role grants).
+// Each row records BOTH the wallet balance and the outstanding debt before/after.
+model WalletTransaction {
+  id       String          @id @default(uuid(7)) @db.Uuid
+  walletId String          @map("wallet_id") @db.Uuid
+  userId   String          @map("user_id") @db.Uuid // denormalized for querying
+  sequence Int // 1..n per wallet, gap-free
+  type     TransactionType
+
+  amountMinor        Int    @map("amount_minor") // gross business amount, always > 0
+  walletDeltaMinor   Int    @map("wallet_delta_minor") // signed change of balance
+  debtDeltaMinor     Int    @map("debt_delta_minor") // signed change of debt
+  balanceBeforeMinor Int    @map("balance_before_minor")
+  balanceAfterMinor  Int    @map("balance_after_minor")
+  debtBeforeMinor    Int    @map("debt_before_minor")
+  debtAfterMinor     Int    @map("debt_after_minor")
+  currency           String @db.Char(3)
+
+  paymentMethod PaymentMethod @map("payment_method")
+  description   String // human/admin readable; i18n handled in UI by type
+  reason        String? // mandatory for ADJUSTMENT / REVERSAL / REFUND (app-enforced + CHECK)
+
+  idempotencyKey String @unique @map("idempotency_key")
+  groupId        String @map("group_id") @db.Uuid // links a top-up with its debt settlements
+
+  trainingId            String? @map("training_id") @db.Uuid
+  trainingChargeId      String? @map("training_charge_id") @db.Uuid
+  paymentId             String? @map("payment_id") @db.Uuid
+  createdByAdminId      String? @map("created_by_admin_id") @db.Uuid
+  reversesTransactionId String? @unique @map("reverses_transaction_id") @db.Uuid // a row can be reversed once
+
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  wallet         Wallet             @relation(fields: [walletId], references: [id])
+  user           User               @relation("TxUser", fields: [userId], references: [id])
+  training       Training?          @relation(fields: [trainingId], references: [id])
+  trainingCharge TrainingCharge?    @relation("ChargeTransactions", fields: [trainingChargeId], references: [id])
+  payment        Payment?           @relation("PaymentTransactions", fields: [paymentId], references: [id])
+  createdByAdmin User?              @relation("TxAdmin", fields: [createdByAdminId], references: [id])
+  reverses       WalletTransaction? @relation("Reversal", fields: [reversesTransactionId], references: [id])
+  reversedBy     WalletTransaction? @relation("Reversal")
+  settlements    DebtSettlement[]
+  createdDebt    Debt?              @relation("DebtSourceTx")
+
+  @@unique([walletId, sequence])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([type, createdAt])
+  @@index([trainingId])
+  @@index([createdByAdminId, createdAt])
+  @@index([groupId])
+  @@index([createdAt(sort: Desc), sequence(sort: Desc)]) // admin ledger list, dashboard activity, period reports
+  @@index([paymentId])
+  @@index([trainingChargeId])
+  @@map("wallet_transactions")
+}
+
+// One charge per (training, user) while ACTIVE (partial unique index).
+// Holds the PRICE SNAPSHOT — later price changes never touch it.
+model TrainingCharge {
+  id           String @id @default(uuid(7)) @db.Uuid
+  trainingId   String @map("training_id") @db.Uuid
+  userId       String @map("user_id") @db.Uuid
+  walletId     String @map("wallet_id") @db.Uuid
+  attendanceId String @map("attendance_id") @db.Uuid
+
+  unitPriceMinor      Int         @map("unit_price_minor") // snapshot
+  priceSource         PriceSource @map("price_source")
+  currency            String      @db.Char(3)
+  paidFromWalletMinor Int         @map("paid_from_wallet_minor") // at charge time
+  shortfallMinor      Int         @map("shortfall_minor") // became debt
+
+  status     ChargeStatus @default(ACTIVE)
+  reversedAt DateTime?    @map("reversed_at") @db.Timestamptz
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  training     Training            @relation(fields: [trainingId], references: [id])
+  user         User                @relation(fields: [userId], references: [id])
+  wallet       Wallet              @relation(fields: [walletId], references: [id])
+  attendance   Attendance          @relation(fields: [attendanceId], references: [id])
+  transactions WalletTransaction[] @relation("ChargeTransactions")
+  debt         Debt?
+
+  @@unique([trainingId, userId], where: raw("status = 'ACTIVE'"), map: "training_charges_one_active")
+  @@index([trainingId])
+  @@index([userId, createdAt])
+  @@index([attendanceId])
+  @@index([walletId])
+  @@map("training_charges")
+}
+
+model Debt {
+  id                     String     @id @default(uuid(7)) @db.Uuid
+  userId                 String     @map("user_id") @db.Uuid
+  walletId               String     @map("wallet_id") @db.Uuid
+  source                 DebtSource
+  sourceTransactionId    String     @unique @map("source_transaction_id") @db.Uuid // ledger row that created it
+  trainingChargeId       String?    @unique @map("training_charge_id") @db.Uuid
+  originalAmountMinor    Int        @map("original_amount_minor")
+  // Mutable projection = original − Σ settlements − cancellation. Changed only by ledger service.
+  outstandingAmountMinor Int        @map("outstanding_amount_minor")
+  currency               String     @db.Char(3)
+  status                 DebtStatus @default(OPEN)
+  settledAt              DateTime?  @map("settled_at") @db.Timestamptz
+  cancelledAt            DateTime?  @map("cancelled_at") @db.Timestamptz
+  createdAt              DateTime   @default(now()) @map("created_at") @db.Timestamptz
+
+  user              User              @relation(fields: [userId], references: [id])
+  wallet            Wallet            @relation(fields: [walletId], references: [id])
+  sourceTransaction WalletTransaction @relation("DebtSourceTx", fields: [sourceTransactionId], references: [id])
+  trainingCharge    TrainingCharge?   @relation(fields: [trainingChargeId], references: [id])
+  settlements       DebtSettlement[]
+
+  @@index([walletId, status, createdAt]) // FIFO allocation scan
+  @@index([userId])
+  @@map("debts")
+}
+
+// Append-only link between a DEBT_PAYMENT ledger row and the debt(s) it settled.
+model DebtSettlement {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  debtId        String   @map("debt_id") @db.Uuid
+  transactionId String   @map("transaction_id") @db.Uuid
+  amountMinor   Int      @map("amount_minor")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  debt        Debt              @relation(fields: [debtId], references: [id])
+  transaction WalletTransaction @relation(fields: [transactionId], references: [id])
+
+  @@unique([debtId, transactionId])
+  @@index([transactionId])
+  @@map("debt_settlements")
+}
+
+// External payment attempt (Stripe PaymentIntent). Lifecycle status is mutable;
+// the money effect is only ever the ledger row it produces.
+model Payment {
+  id                   String          @id @default(uuid(7)) @db.Uuid
+  userId               String          @map("user_id") @db.Uuid
+  walletId             String          @map("wallet_id") @db.Uuid
+  provider             PaymentProvider @default(STRIPE)
+  providerPaymentId    String?         @unique @map("provider_payment_id") // pi_...
+  providerCustomerId   String?         @map("provider_customer_id") // cus_...
+  amountMinor          Int             @map("amount_minor")
+  refundedAmountMinor  Int             @default(0) @map("refunded_amount_minor")
+  currency             String          @db.Char(3)
+  status               PaymentStatus   @default(REQUIRES_PAYMENT)
+  methodType           String?         @map("method_type") // card | ideal | apple_pay (from Stripe)
+  failureCode          String?         @map("failure_code")
+  clientIdempotencyKey String          @map("client_idempotency_key")
+  succeededAt          DateTime?       @map("succeeded_at") @db.Timestamptz
+  createdAt            DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime        @updatedAt @map("updated_at") @db.Timestamptz
+
+  user         User                @relation(fields: [userId], references: [id])
+  wallet       Wallet              @relation(fields: [walletId], references: [id])
+  transactions WalletTransaction[] @relation("PaymentTransactions")
+
+  @@unique([userId, clientIdempotencyKey])
+  @@index([status, createdAt]) // sweeper for stuck PROCESSING payments
+  @@index([createdAt(sort: Desc)]) // admin payments list
+  @@index([walletId])
+  @@map("payments")
+}
+
+// Webhook de-duplication + raw audit trail.
+model StripeEvent {
+  id          String    @id // evt_...
+  type        String
+  payload     Json
+  receivedAt  DateTime  @default(now()) @map("received_at") @db.Timestamptz
+  processedAt DateTime? @map("processed_at") @db.Timestamptz
+  error       String?
+
+  @@index([type, receivedAt])
+  @@map("stripe_events")
+}
+
+// ─────────────────────────────── Trainings ───────────────────────────────
+
+// [D7] Recurring definition; generates Training rows. Optional for v1.
+model TrainingSeries {
+  id                String    @id @default(uuid(7)) @db.Uuid
+  title             String
+  description       String?
+  location          String
+  rrule             String // RFC 5545 RRULE, e.g. FREQ=WEEKLY;BYDAY=TU
+  startTimeLocal    String    @map("start_time_local") // "19:00"
+  durationMinutes   Int       @map("duration_minutes")
+  timezone          String    @default("Europe/Amsterdam")
+  capacity          Int?
+  defaultPriceMinor Int       @map("default_price_minor")
+  currency          String    @default("EUR") @db.Char(3)
+  deadlineOffsetMin Int       @map("deadline_offset_min") // reservation deadline = start − offset
+  startsOn          DateTime  @map("starts_on") @db.Date
+  endsOn            DateTime? @map("ends_on") @db.Date
+  createdById       String    @map("created_by_id") @db.Uuid
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt         DateTime? @map("deleted_at") @db.Timestamptz
+
+  trainings Training[]
+
+  @@map("training_series")
+}
+
+model Training {
+  id                  String         @id @default(uuid(7)) @db.Uuid
+  seriesId            String?        @map("series_id") @db.Uuid
+  title               String
+  description         String?
+  location            String
+  startsAt            DateTime       @map("starts_at") @db.Timestamptz
+  endsAt              DateTime       @map("ends_at") @db.Timestamptz
+  timezone            String         @default("Europe/Amsterdam")
+  capacity            Int? // null = unlimited
+  defaultPriceMinor   Int            @map("default_price_minor")
+  currency            String         @default("EUR") @db.Char(3)
+  reservationDeadline DateTime       @map("reservation_deadline") @db.Timestamptz
+  status              TrainingStatus @default(SCHEDULED)
+
+  cancelledAt             DateTime? @map("cancelled_at") @db.Timestamptz
+  cancellationReason      String?   @map("cancellation_reason")
+  attendanceFinalizedAt   DateTime? @map("attendance_finalized_at") @db.Timestamptz
+  attendanceFinalizedById String?   @map("attendance_finalized_by_id") @db.Uuid
+
+  createdById String    @map("created_by_id") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz // only allowed while no reservations/charges
+
+  series         TrainingSeries?         @relation(fields: [seriesId], references: [id])
+  createdBy      User                    @relation("TrainingCreatedBy", fields: [createdById], references: [id])
+  reservations   TrainingReservation[]
+  attendances    Attendance[]
+  priceOverrides TrainingPriceOverride[]
+  charges        TrainingCharge[]
+  transactions   WalletTransaction[]
+
+  @@unique([seriesId, startsAt], where: raw("series_id IS NOT NULL AND deleted_at IS NULL"), map: "trainings_series_occurrence")
+  @@index([startsAt])
+  @@index([status, startsAt])
+  @@index([seriesId])
+  @@index([createdById])
+  @@map("trainings")
+}
+
+// [D5] Standing personal price (applies to every training unless overridden).
+model UserStandingPrice {
+  userId     String   @id @map("user_id") @db.Uuid
+  priceMinor Int      @map("price_minor")
+  currency   String   @default("EUR") @db.Char(3)
+  setById    String   @map("set_by_id") @db.Uuid
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation("StandingPriceUser", fields: [userId], references: [id])
+
+  @@map("user_standing_prices")
+}
+
+// Configuration (not a financial record) — changes are audit-logged.
+model TrainingPriceOverride {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  trainingId String   @map("training_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  priceMinor Int      @map("price_minor") // >= 0 (0 = free for this user)
+  setById    String   @map("set_by_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  training Training @relation(fields: [trainingId], references: [id])
+  user     User     @relation("OverrideUser", fields: [userId], references: [id])
+
+  @@unique([trainingId, userId])
+  @@index([userId])
+  @@map("training_price_overrides")
+}
+
+model TrainingReservation {
+  id            String            @id @default(uuid(7)) @db.Uuid
+  trainingId    String            @map("training_id") @db.Uuid
+  userId        String            @map("user_id") @db.Uuid
+  status        ReservationStatus
+  respondedById String            @map("responded_by_id") @db.Uuid // user or admin
+  respondedAt   DateTime          @map("responded_at") @db.Timestamptz
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+
+  training Training @relation(fields: [trainingId], references: [id])
+  user     User     @relation("ReservationUser", fields: [userId], references: [id])
+
+  @@unique([trainingId, userId]) // prevents duplicate reservations
+  @@index([trainingId, status])
+  @@index([userId])
+  @@map("training_reservations")
+}
+
+model Attendance {
+  id         String           @id @default(uuid(7)) @db.Uuid
+  trainingId String           @map("training_id") @db.Uuid
+  userId     String           @map("user_id") @db.Uuid
+  status     AttendanceStatus @default(PENDING)
+  note       String?
+  markedById String?          @map("marked_by_id") @db.Uuid
+  markedAt   DateTime?        @map("marked_at") @db.Timestamptz
+  createdAt  DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+
+  training Training         @relation(fields: [trainingId], references: [id])
+  user     User             @relation("AttendanceUser", fields: [userId], references: [id])
+  charges  TrainingCharge[]
+
+  @@unique([trainingId, userId])
+  @@index([userId, createdAt])
+  @@map("attendances")
+}
+
+// ─────────────────────────────── Notifications ───────────────────────────────
+
+model Notification {
+  id        String               @id @default(uuid(7)) @db.Uuid
+  userId    String               @map("user_id") @db.Uuid
+  type      NotificationType
+  category  NotificationCategory
+  params    Json // rendered client-side via i18n key notifications:<type>
+  dedupeKey String               @map("dedupe_key")
+  readAt    DateTime?            @map("read_at") @db.Timestamptz
+  createdAt DateTime             @default(now()) @map("created_at") @db.Timestamptz
+  deletedAt DateTime?            @map("deleted_at") @db.Timestamptz
+
+  user       User                   @relation(fields: [userId], references: [id])
+  deliveries NotificationDelivery[]
+
+  @@unique([userId, dedupeKey]) // no duplicate notifications
+  @@index([userId, readAt, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  userId      String               @map("user_id") @db.Uuid
+  category    NotificationCategory
+  pushEnabled Boolean              @default(true) @map("push_enabled")
+  updatedAt   DateTime             @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@id([userId, category])
+  @@map("notification_preferences")
+}
+
+model DeviceToken {
+  id         String         @id @default(uuid(7)) @db.Uuid
+  userId     String         @map("user_id") @db.Uuid
+  platform   DevicePlatform
+  provider   PushProvider
+  token      String         @unique // re-registration moves token to current user
+  appVersion String?        @map("app_version")
+  lastSeenAt DateTime       @map("last_seen_at") @db.Timestamptz
+  revokedAt  DateTime?      @map("revoked_at") @db.Timestamptz
+  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  user       User                   @relation(fields: [userId], references: [id])
+  deliveries NotificationDelivery[]
+
+  @@index([userId])
+  @@map("device_tokens")
+}
+
+model NotificationDelivery {
+  id                String         @id @default(uuid(7)) @db.Uuid
+  notificationId    String         @map("notification_id") @db.Uuid
+  deviceTokenId     String         @map("device_token_id") @db.Uuid
+  status            DeliveryStatus
+  providerMessageId String?        @map("provider_message_id")
+  error             String?
+  attemptedAt       DateTime       @default(now()) @map("attempted_at") @db.Timestamptz
+
+  notification Notification @relation(fields: [notificationId], references: [id])
+  deviceToken  DeviceToken  @relation(fields: [deviceTokenId], references: [id])
+
+  @@index([notificationId])
+  @@index([deviceTokenId]) // device purge cascades here
+  @@map("notification_deliveries")
+}
+
+// ─────────────────────────────── Platform ───────────────────────────────
+
+// Append-only. Every admin action, financial op, auth event and view session.
+model AuditLog {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  actorId       String?  @map("actor_id") @db.Uuid // null = system/webhook
+  actorRole     Role?    @map("actor_role")
+  action        String // e.g. wallet.cash_top_up, training.cancel, view_session.start
+  entityType    String   @map("entity_type")
+  entityId      String?  @map("entity_id")
+  viewSessionId String?  @map("view_session_id") @db.Uuid
+  requestId     String?  @map("request_id")
+  ipAddress     String?  @map("ip_address")
+  userAgent     String?  @map("user_agent")
+  before        Json?
+  after         Json?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// Transactional outbox: written in the same tx as the business change.
+model OutboxEvent {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  type        String // notification.dispatch, socket.emit, email.send, ...
+  payload     Json
+  availableAt DateTime  @default(now()) @map("available_at") @db.Timestamptz
+  attempts    Int       @default(0)
+  lastError   String?   @map("last_error")
+  processedAt DateTime? @map("processed_at") @db.Timestamptz
+  failedAt    DateTime? @map("failed_at") @db.Timestamptz // gave up after max attempts; alerting picks these up
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([processedAt, failedAt, availableAt])
+  @@map("outbox_events")
+}
+
+// Replay store for the Idempotency-Key header on mutating endpoints.
+model IdempotencyRecord {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  actorId        String    @map("actor_id") @db.Uuid
+  key            String
+  method         String
+  path           String
+  requestHash    String    @map("request_hash") // SHA-256 of canonical body
+  responseStatus Int?      @map("response_status")
+  responseBody   Json?     @map("response_body")
+  lockedUntil    DateTime? @map("locked_until") @db.Timestamptz // in-flight guard
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz // 24 h
+
+  @@unique([actorId, key])
+  @@index([expiresAt])
+  @@map("idempotency_records")
+}
+
+// Business settings editable in Admin → Settings (top-up limits, thresholds, reminders...).
+model AppSetting {
+  key         String   @id
+  value       Json
+  updatedById String?  @map("updated_by_id") @db.Uuid
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("app_settings")
+}

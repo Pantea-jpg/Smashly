@@ -1,0 +1,7 @@
+{
+  "extends": "@tw/config/tsconfig/node.json",
+  "compilerOptions": {
+    "rootDir": "."
+  },
+  "include": ["src", "prisma", "scripts", "test", "prisma.config.ts", "vitest.config.ts"]
+}

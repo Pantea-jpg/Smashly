@@ -1,0 +1,55 @@
+{
+  "memberSince": "Member since {{date}}",
+  "sections": {
+    "account": "Account",
+    "preferences": "Preferences",
+    "security": "Security",
+    "danger": "Account removal"
+  },
+  "edit": {
+    "title": "Edit profile",
+    "save": "Save changes",
+    "saved": "Your profile has been updated."
+  },
+  "password": {
+    "title": "Change password",
+    "current": "Current password",
+    "submit": "Change password",
+    "done": "Password changed. Your other devices have been signed out."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "intro": "Choose which push notifications you receive. Every notification is always kept in the app.",
+    "TRAININGS": "Trainings",
+    "TRAININGS_hint": "New sessions, schedule changes and cancellations",
+    "PAYMENTS": "Payments",
+    "PAYMENTS_hint": "Top-ups, cash payments and training charges",
+    "REMINDERS": "Reminders",
+    "REMINDERS_hint": "Upcoming trainings and outstanding balance",
+    "device": {
+      "title": "This iPhone",
+      "granted": "Notifications are on",
+      "granted_hint": "Choose below which types you receive.",
+      "denied": "Notifications are off",
+      "denied_hint": "Turn them on for Training Wallet in the iPhone Settings app.",
+      "undetermined": "Notifications are not set up",
+      "undetermined_hint": "Turn them on to get reminders and payment updates.",
+      "enable": "Turn on",
+      "openSettings": "Open Settings"
+    }
+  },
+  "avatar": {
+    "change": "Change photo",
+    "remove": "Remove photo",
+    "permission": "Allow photo access in Settings to choose a picture.",
+    "failed": "The photo could not be uploaded. Please try again."
+  },
+  "delete": {
+    "title": "Delete account",
+    "intro": "Your personal details will be removed and you will be signed out everywhere. Payment records are kept for legal reasons, without your name.",
+    "password": "Confirm with your password",
+    "submit": "Delete my account",
+    "confirmTitle": "Delete your account?",
+    "confirmBody": "This cannot be undone."
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "types": {
+    "TRAINING_CREATED": {
+      "title": "New training",
+      "body": "{{title}} · {{date}}"
+    },
+    "TRAINING_CREATED_SERIES": {
+      "title": "New recurring training",
+      "body": "{{title}} ({{count}} sessions planned)"
+    },
+    "TRAINING_UPDATED": {
+      "title": "Training changed",
+      "body": "{{title}} on {{date}} has changed."
+    },
+    "TRAINING_CANCELLED": {
+      "title": "Training cancelled",
+      "body": "{{title}} on {{date}}: {{reason}}"
+    },
+    "TRAINING_CANCELLED_REFUNDED": {
+      "title": "Training cancelled",
+      "body": "{{title}} on {{date}}: {{reason}}. Your charge has been reversed."
+    },
+    "TRAINING_REMINDER": {
+      "title": "Training reminder",
+      "body": "{{title}} · {{date}}"
+    },
+    "TRAINING_REMINDER_SOON": {
+      "title": "Training starts soon",
+      "body": "{{title}} starts at {{time}}."
+    },
+    "RESERVATION_CONFIRMED": {
+      "title": "Response updated",
+      "body": "Your response for {{title}} is now: {{status}}."
+    },
+    "ATTENDANCE_RECORDED": {
+      "title": "Attendance recorded",
+      "body": "{{title}}"
+    },
+    "TRAINING_CHARGED": {
+      "title": "Training charged",
+      "body": "{{amount}} for {{title}}."
+    },
+    "TRAINING_CHARGED_DEBT": {
+      "title": "Training charged",
+      "body": "{{amount}} for {{title}}. {{debt}} is outstanding."
+    },
+    "TOP_UP_SUCCEEDED": {
+      "title": "Top-up received",
+      "body": "{{amount}} has been added to your wallet."
+    },
+    "TOP_UP_FAILED": {
+      "title": "Top-up failed",
+      "body": "Your top-up of {{amount}} did not go through."
+    },
+    "CASH_PAYMENT_RECORDED": {
+      "title": "Cash payment recorded",
+      "body": "{{amount}} has been added to your wallet."
+    },
+    "LOW_BALANCE": {
+      "title": "Low balance",
+      "body": "Your balance is {{amount}}. Top up so your next trainings are paid from your wallet."
+    },
+    "DEBT_REMINDER": {
+      "title": "Outstanding balance",
+      "body": "You have {{amount}} outstanding. It is paid off automatically with your next top-up."
+    },
+    "ATTENDANCE_FINALIZATION_REMINDER": {
+      "title": "Finalize attendance",
+      "body": "{{title}} ({{date}}) is waiting to be finalized."
+    }
+  },
+  "status": {
+    "ATTENDING": "attending",
+    "NOT_ATTENDING": "not attending"
+  }
+}

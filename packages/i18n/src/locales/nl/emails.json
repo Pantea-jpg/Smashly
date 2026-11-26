@@ -1,0 +1,28 @@
+{
+  "greeting": "Hoi {{firstName}},",
+  "signature": "Het Training Wallet-team",
+  "linkFallback": "Werkt de knop niet? Open deze link op je telefoon:",
+  "verifyEmail": {
+    "subject": "Bevestig je e-mailadres",
+    "intro": "Welkom! Bevestig je e-mailadres om je account af te ronden.",
+    "action": "E-mailadres bevestigen",
+    "expiry": "Deze link verloopt over 48 uur.",
+    "ignore": "Heb je geen account aangemaakt? Dan kun je deze e-mail negeren."
+  },
+  "resetPassword": {
+    "subject": "Stel je wachtwoord opnieuw in",
+    "intro": "We hebben een verzoek ontvangen om het wachtwoord van je account opnieuw in te stellen.",
+    "action": "Nieuw wachtwoord kiezen",
+    "expiry": "Deze link verloopt over 30 minuten en werkt één keer.",
+    "ignore": "Heb je dit niet aangevraagd? Dan kun je deze e-mail negeren. Je wachtwoord blijft hetzelfde."
+  },
+  "passwordChanged": {
+    "subject": "Je wachtwoord is gewijzigd",
+    "intro": "Je wachtwoord is zojuist gewijzigd en je bent op alle apparaten uitgelogd.",
+    "warning": "Was jij dit niet? Neem dan direct contact op met de beheerder."
+  },
+  "accountApproved": {
+    "subject": "Je account is goedgekeurd",
+    "intro": "Goed nieuws: een beheerder heeft je account goedgekeurd. Je kunt nu inloggen in de app."
+  }
+}

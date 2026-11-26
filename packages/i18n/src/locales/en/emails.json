@@ -1,0 +1,28 @@
+{
+  "greeting": "Hi {{firstName}},",
+  "signature": "The Training Wallet team",
+  "linkFallback": "If the button doesn't work, open this link on your phone:",
+  "verifyEmail": {
+    "subject": "Confirm your email address",
+    "intro": "Welcome! Please confirm your email address to finish setting up your account.",
+    "action": "Confirm email address",
+    "expiry": "This link expires in 48 hours.",
+    "ignore": "If you didn't create an account, you can ignore this email."
+  },
+  "resetPassword": {
+    "subject": "Reset your password",
+    "intro": "We received a request to reset the password for your account.",
+    "action": "Choose a new password",
+    "expiry": "This link expires in 30 minutes and can be used once.",
+    "ignore": "If you didn't request this, you can ignore this email. Your password stays the same."
+  },
+  "passwordChanged": {
+    "subject": "Your password was changed",
+    "intro": "Your password was just changed, and you have been signed out on all devices.",
+    "warning": "If this wasn't you, contact the administrator immediately."
+  },
+  "accountApproved": {
+    "subject": "Your account has been approved",
+    "intro": "Good news: an administrator approved your account. You can now sign in to the app."
+  }
+}

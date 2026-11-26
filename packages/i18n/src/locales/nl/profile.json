@@ -1,0 +1,55 @@
+{
+  "memberSince": "Lid sinds {{date}}",
+  "sections": {
+    "account": "Account",
+    "preferences": "Voorkeuren",
+    "security": "Beveiliging",
+    "danger": "Account verwijderen"
+  },
+  "edit": {
+    "title": "Profiel bewerken",
+    "save": "Wijzigingen opslaan",
+    "saved": "Je profiel is bijgewerkt."
+  },
+  "password": {
+    "title": "Wachtwoord wijzigen",
+    "current": "Huidig wachtwoord",
+    "submit": "Wachtwoord wijzigen",
+    "done": "Wachtwoord gewijzigd. Je bent uitgelogd op je andere apparaten."
+  },
+  "notifications": {
+    "title": "Meldingen",
+    "intro": "Kies welke pushmeldingen je ontvangt. Alle meldingen blijven altijd in de app staan.",
+    "TRAININGS": "Trainingen",
+    "TRAININGS_hint": "Nieuwe trainingen, roosterwijzigingen en annuleringen",
+    "PAYMENTS": "Betalingen",
+    "PAYMENTS_hint": "Opwaarderingen, contante betalingen en trainingskosten",
+    "REMINDERS": "Herinneringen",
+    "REMINDERS_hint": "Aankomende trainingen en openstaand saldo",
+    "device": {
+      "title": "Deze iPhone",
+      "granted": "Meldingen staan aan",
+      "granted_hint": "Kies hieronder welke soorten je ontvangt.",
+      "denied": "Meldingen staan uit",
+      "denied_hint": "Zet ze aan voor Training Wallet in de app Instellingen van je iPhone.",
+      "undetermined": "Meldingen zijn nog niet ingesteld",
+      "undetermined_hint": "Zet ze aan voor herinneringen en betaalupdates.",
+      "enable": "Aanzetten",
+      "openSettings": "Open Instellingen"
+    }
+  },
+  "avatar": {
+    "change": "Foto wijzigen",
+    "remove": "Foto verwijderen",
+    "permission": "Geef in Instellingen toegang tot je foto's om een afbeelding te kiezen.",
+    "failed": "De foto kon niet worden geüpload. Probeer het opnieuw."
+  },
+  "delete": {
+    "title": "Account verwijderen",
+    "intro": "Je persoonsgegevens worden verwijderd en je wordt overal uitgelogd. Betaalgegevens blijven om wettelijke redenen bewaard, zonder je naam.",
+    "password": "Bevestig met je wachtwoord",
+    "submit": "Mijn account verwijderen",
+    "confirmTitle": "Je account verwijderen?",
+    "confirmBody": "Dit kan niet ongedaan worden gemaakt."
+  }
+}

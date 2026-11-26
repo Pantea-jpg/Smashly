@@ -1,0 +1,17 @@
+{
+  "appName": "Training Wallet",
+  "actions": {
+    "cancel": "Annuleren",
+    "confirm": "Bevestigen",
+    "save": "Opslaan",
+    "retry": "Opnieuw proberen",
+    "close": "Sluiten",
+    "signOut": "Uitloggen"
+  },
+  "states": {
+    "loading": "Laden…",
+    "empty": "Hier staat nog niets",
+    "offline": "Je bent offline"
+  },
+  "comingSoon": "Dit scherm komt in een volgende fase."
+}

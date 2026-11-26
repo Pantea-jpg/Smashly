@@ -1,0 +1,16 @@
+{
+  "user": {
+    "home": "Home",
+    "trainings": "Trainings",
+    "wallet": "Wallet",
+    "notifications": "Notifications",
+    "profile": "Profile"
+  },
+  "admin": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "trainings": "Trainings",
+    "finance": "Finance",
+    "more": "More"
+  }
+}

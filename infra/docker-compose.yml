@@ -1,0 +1,61 @@
+# Local development services. Start with: pnpm db:up
+name: training-wallet
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: tw
+      POSTGRES_PASSWORD: tw_local_password
+      POSTGRES_DB: training_wallet
+      TZ: UTC
+    ports:
+      # Host port 5433 avoids clashing with a locally installed PostgreSQL on 5432.
+      - '5433:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U tw -d training_wallet']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Redis-compatible (BSD-licensed). Used from Phase 3 for rate limiting and Socket.IO.
+  valkey:
+    image: valkey/valkey:8-alpine
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'valkey-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Catches all outgoing email locally (password reset, verification). UI: http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+
+  # S3-compatible object storage (SeaweedFS, Apache-2.0) for profile pictures.
+  # Create the bucket once with: pnpm --filter @tw/api storage:setup
+  s3:
+    image: chrislusf/seaweedfs:latest
+    command: server -dir=/data -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json -volume.max=0
+    ports:
+      - '8333:8333'
+    volumes:
+      - s3-data:/data
+      - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+
+  # Offline Stripe API (stateless, returns canned objects) for local runs without a Stripe account.
+  # Set STRIPE_API_URL=http://localhost:12111 in apps/api/.env to use it.
+  stripe-mock:
+    image: stripe/stripe-mock:latest
+    ports:
+      - '12111:12111'
+
+volumes:
+  postgres-data:
+  s3-data:

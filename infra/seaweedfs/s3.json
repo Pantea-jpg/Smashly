@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "training-wallet-local",
+      "credentials": [{ "accessKey": "tw_s3", "secretKey": "tw_s3_local_password" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

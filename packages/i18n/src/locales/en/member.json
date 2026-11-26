@@ -1,0 +1,118 @@
+{
+  "home": {
+    "greeting": "Hi {{name}}",
+    "balance": "Wallet balance",
+    "debt": "Outstanding",
+    "topUp": "Top up",
+    "debtBanner": "You have {{amount}} outstanding. It is paid off automatically with your next top-up.",
+    "nextTraining": "Next training",
+    "noTraining": "No upcoming trainings",
+    "recent": "Recent activity",
+    "noActivity": "No transactions yet",
+    "seeAll": "See all",
+    "unread_one": "{{count}} unread notification",
+    "unread_other": "{{count}} unread notifications",
+    "pushPrompt": {
+      "title": "Get reminders and payment updates",
+      "body": "We let you know before your trainings, when a payment arrives and when your balance runs low. You can change this per type in your profile.",
+      "enable": "Turn on",
+      "later": "Not now"
+    }
+  },
+  "trainings": {
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "empty": "No trainings here yet",
+    "spotsLeft_one": "{{count}} place left",
+    "spotsLeft_other": "{{count}} places left",
+    "full": "Full",
+    "unlimited": "No limit",
+    "deadline": "Respond before {{date}}",
+    "deadlinePassed": "Responses are closed",
+    "yourPrice": "Your price",
+    "priceSource": {
+      "TRAINING_DEFAULT": "Standard price",
+      "USER_STANDING_PRICE": "Your personal price",
+      "TRAINING_OVERRIDE": "Special price for you"
+    },
+    "attend": "I'll be there",
+    "notAttend": "I can't make it",
+    "status": {
+      "ATTENDING": "Attending",
+      "NOT_ATTENDING": "Not attending",
+      "none": "No response yet",
+      "CANCELLED": "Cancelled"
+    },
+    "attendance": {
+      "PENDING": "Not recorded yet",
+      "PRESENT": "Present",
+      "ABSENT": "Absent",
+      "EXCUSED": "Excused"
+    },
+    "cancelled": "Cancelled: {{reason}}",
+    "charged": "Charged {{amount}}",
+    "chargedWithDebt": "Charged {{amount}}, of which {{debt}} is outstanding",
+    "chargeReversed": "Charge reversed",
+    "debtWarning": "You have an outstanding balance. You can still reserve; it is settled with your next top-up.",
+    "saved": "Response saved",
+    "when": "When",
+    "location": "Location",
+    "places": "Places",
+    "attendanceTitle": "Attendance"
+  },
+  "wallet": {
+    "balance": "Balance",
+    "debt": "Outstanding",
+    "topUp": "Top up",
+    "verifyToTopUp": "Confirm your email address to top up online.",
+    "openDebts": "Outstanding amounts",
+    "transactions": "Transactions",
+    "empty": "No transactions yet",
+    "reversed": "Reversed",
+    "type": {
+      "ONLINE_TOP_UP": "Online top-up",
+      "CASH_TOP_UP": "Cash payment",
+      "TRAINING_PAYMENT": "Training",
+      "DEBT_PAYMENT": "Outstanding amount paid",
+      "REFUND": "Refund",
+      "ADJUSTMENT": "Adjustment",
+      "REVERSAL": "Correction"
+    },
+    "method": {
+      "STRIPE": "Card, Apple Pay or iDEAL",
+      "CASH": "Cash",
+      "WALLET": "Wallet",
+      "SYSTEM": "Correction"
+    },
+    "detail": {
+      "amount": "Amount",
+      "walletChange": "Wallet change",
+      "debtChange": "Outstanding change",
+      "balanceAfter": "Balance after",
+      "debtAfter": "Outstanding after",
+      "method": "Method",
+      "date": "Date",
+      "reason": "Reason",
+      "reversedLater": "This entry was corrected later."
+    }
+  },
+  "topUp": {
+    "title": "Top up",
+    "choose": "Choose an amount",
+    "custom": "Other amount (€)",
+    "limits": "Between {{min}} and {{max}}",
+    "pay": "Pay {{amount}}",
+    "invalid": "Enter an amount between {{min}} and {{max}}",
+    "processing": "Confirming your payment…",
+    "success": "{{amount}} has been added to your wallet.",
+    "failed": "The payment did not go through. No money was taken.",
+    "canceled": "Payment cancelled.",
+    "done": "Done",
+    "methods": "Pay with card, Apple Pay or iDEAL.",
+    "merchantName": "Training Wallet"
+  },
+  "notifications": {
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications yet"
+  }
+}

@@ -1,0 +1,39 @@
+# Admin: open the attendance queue, mark the first member present and finalize (charges
+# the members marked present). Needs a past training that is not finalized yet.
+appId: com.trainingwallet.app
+name: Admin finalizes attendance
+tags: [smoke, admin, money]
+---
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      EMAIL: ${ADMIN_EMAIL}
+      PASSWORD: ${ADMIN_PASSWORD}
+- extendedWaitUntil:
+    visible:
+      id: admin-dashboard
+    timeout: 20000
+- tapOn:
+    id: tab-more
+- tapOn:
+    id: row-queue
+- assertVisible:
+    id: attendance-queue
+- tapOn:
+    id: 'queue-.*'
+    index: 0
+- assertVisible:
+    id: attendance-screen
+- tapOn:
+    id: 'mark-.*-PRESENT'
+    index: 0
+- scrollUntilVisible:
+    element:
+      id: finalize-attendance
+- tapOn:
+    id: finalize-attendance
+- tapOn: Finalize and charge
+- extendedWaitUntil:
+    visible:
+      id: finalize-result
+    timeout: 15000

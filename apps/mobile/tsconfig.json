@@ -1,0 +1,8 @@
+{
+  "extends": ["@tw/config/tsconfig/base.json", "expo/tsconfig.base"],
+  "compilerOptions": {
+    "allowJs": false,
+    "types": ["jest", "node"]
+  },
+  "include": ["index.ts", "src", "test", "app.config.ts"]
+}

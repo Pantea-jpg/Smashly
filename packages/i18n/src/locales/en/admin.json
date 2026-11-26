@@ -1,0 +1,48 @@
+{
+  "users": {
+    "search": "Search by name or email",
+    "empty": "No users found",
+    "filters": {
+      "all": "All",
+      "ACTIVE": "Active",
+      "PENDING_APPROVAL": "Pending",
+      "INACTIVE": "Inactive"
+    },
+    "total_one": "{{count}} user",
+    "total_other": "{{count}} users"
+  },
+  "status": {
+    "ACTIVE": "Active",
+    "INACTIVE": "Inactive",
+    "PENDING_APPROVAL": "Pending approval"
+  },
+  "detail": {
+    "balance": "Wallet balance",
+    "debt": "Outstanding debt",
+    "email": "Email",
+    "phone": "Phone",
+    "language": "Language",
+    "registered": "Registered",
+    "lastLogin": "Last sign-in",
+    "never": "Never",
+    "unverified": "Email not confirmed",
+    "deleted": "Account deleted"
+  },
+  "actions": {
+    "viewAs": "View as user",
+    "activate": "Activate account",
+    "deactivate": "Deactivate account",
+    "approve": "Approve account",
+    "reasonLabel": "Reason (recorded in the audit log)",
+    "confirmDeactivateTitle": "Deactivate {{name}}?",
+    "confirmDeactivateBody": "They will be signed out on all devices and cannot sign in until the account is activated again.",
+    "confirmActivateTitle": "Activate {{name}}?",
+    "confirmActivateBody": "They will be able to sign in.",
+    "done": "Status updated."
+  },
+  "viewAs": {
+    "banner": "Viewing as {{name}} · Read-only",
+    "exit": "Exit",
+    "readOnly": "Read-only: changes are disabled while viewing as a user."
+  }
+}

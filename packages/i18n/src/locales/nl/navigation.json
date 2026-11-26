@@ -1,0 +1,16 @@
+{
+  "user": {
+    "home": "Home",
+    "trainings": "Trainingen",
+    "wallet": "Portemonnee",
+    "notifications": "Meldingen",
+    "profile": "Profiel"
+  },
+  "admin": {
+    "dashboard": "Dashboard",
+    "users": "Gebruikers",
+    "trainings": "Trainingen",
+    "finance": "Financiën",
+    "more": "Meer"
+  }
+}

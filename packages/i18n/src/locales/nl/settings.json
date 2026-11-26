@@ -1,0 +1,18 @@
+{
+  "title": "Instellingen",
+  "language": {
+    "title": "Taal",
+    "en": "English",
+    "nl": "Nederlands"
+  },
+  "appearance": {
+    "title": "Weergave",
+    "system": "Systeem",
+    "light": "Licht",
+    "dark": "Donker"
+  },
+  "account": {
+    "title": "Account",
+    "unverified": "Je e-mailadres is nog niet bevestigd. Kijk in je inbox."
+  }
+}

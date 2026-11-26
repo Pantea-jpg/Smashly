@@ -1,0 +1,52 @@
+# Admin: find a member, record a €5 cash payment (with the confirmation dialog) and see it
+# on the member's detail screen.
+appId: com.trainingwallet.app
+name: Admin records a cash payment
+tags: [smoke, admin, money]
+---
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      EMAIL: ${ADMIN_EMAIL}
+      PASSWORD: ${ADMIN_PASSWORD}
+- extendedWaitUntil:
+    visible:
+      id: admin-dashboard
+    timeout: 20000
+- tapOn:
+    id: tab-users
+- tapOn:
+    id: users-search
+- inputText: ${MEMBER_EMAIL}
+- hideKeyboard
+- tapOn:
+    id: user-row-${MEMBER_EMAIL}
+- assertVisible:
+    id: user-detail-screen
+- copyTextFrom:
+    id: user-balance
+- evalScript: ${output.balanceBefore = maestro.copiedText}
+- tapOn:
+    id: record-cash
+- assertVisible:
+    id: cash-payment-screen
+- tapOn:
+    id: cash-amount
+- inputText: '5'
+- tapOn:
+    id: cash-note
+- inputText: 'Maestro smoke test'
+- hideKeyboard
+- tapOn:
+    id: submit-cash
+# Native confirmation dialog (the amount and the member's name are in its title).
+- tapOn: Confirm
+- assertVisible:
+    id: user-detail-screen
+- copyTextFrom:
+    id: user-balance
+- assertTrue:
+    condition: ${maestro.copiedText != output.balanceBefore}
+    label: Balance changed after the cash payment
+- assertNotVisible:
+    id: error-state

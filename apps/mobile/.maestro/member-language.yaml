@@ -1,0 +1,24 @@
+# Member: switch the app to Dutch and back. Tab labels change immediately.
+appId: com.trainingwallet.app
+name: Language switch EN ⇄ NL
+tags: [smoke, member, i18n]
+---
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      EMAIL: ${MEMBER_EMAIL}
+      PASSWORD: ${MEMBER_PASSWORD}
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 20000
+- tapOn:
+    id: tab-profile
+- tapOn:
+    id: row-settings
+- tapOn:
+    id: language-nl
+- assertVisible: Portemonnee
+- tapOn:
+    id: language-en
+- assertVisible: Wallet

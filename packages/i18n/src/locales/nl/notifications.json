@@ -1,0 +1,76 @@
+{
+  "types": {
+    "TRAINING_CREATED": {
+      "title": "Nieuwe training",
+      "body": "{{title}} · {{date}}"
+    },
+    "TRAINING_CREATED_SERIES": {
+      "title": "Nieuwe terugkerende training",
+      "body": "{{title}} ({{count}} trainingen gepland)"
+    },
+    "TRAINING_UPDATED": {
+      "title": "Training gewijzigd",
+      "body": "{{title}} op {{date}} is gewijzigd."
+    },
+    "TRAINING_CANCELLED": {
+      "title": "Training geannuleerd",
+      "body": "{{title}} op {{date}}: {{reason}}"
+    },
+    "TRAINING_CANCELLED_REFUNDED": {
+      "title": "Training geannuleerd",
+      "body": "{{title}} op {{date}}: {{reason}}. Je afschrijving is teruggedraaid."
+    },
+    "TRAINING_REMINDER": {
+      "title": "Herinnering training",
+      "body": "{{title}} · {{date}}"
+    },
+    "TRAINING_REMINDER_SOON": {
+      "title": "Training begint zo",
+      "body": "{{title}} begint om {{time}}."
+    },
+    "RESERVATION_CONFIRMED": {
+      "title": "Reactie bijgewerkt",
+      "body": "Je reactie voor {{title}} is nu: {{status}}."
+    },
+    "ATTENDANCE_RECORDED": {
+      "title": "Aanwezigheid geregistreerd",
+      "body": "{{title}}"
+    },
+    "TRAINING_CHARGED": {
+      "title": "Training afgeschreven",
+      "body": "{{amount}} voor {{title}}."
+    },
+    "TRAINING_CHARGED_DEBT": {
+      "title": "Training afgeschreven",
+      "body": "{{amount}} voor {{title}}. {{debt}} staat open."
+    },
+    "TOP_UP_SUCCEEDED": {
+      "title": "Opwaardering ontvangen",
+      "body": "{{amount}} is aan je saldo toegevoegd."
+    },
+    "TOP_UP_FAILED": {
+      "title": "Opwaardering mislukt",
+      "body": "Je opwaardering van {{amount}} is niet gelukt."
+    },
+    "CASH_PAYMENT_RECORDED": {
+      "title": "Contante betaling verwerkt",
+      "body": "{{amount}} is aan je saldo toegevoegd."
+    },
+    "LOW_BALANCE": {
+      "title": "Laag saldo",
+      "body": "Je saldo is {{amount}}. Waardeer op zodat je volgende trainingen van je saldo worden betaald."
+    },
+    "DEBT_REMINDER": {
+      "title": "Openstaand bedrag",
+      "body": "Je hebt {{amount}} openstaan. Dit wordt automatisch verrekend bij je volgende opwaardering."
+    },
+    "ATTENDANCE_FINALIZATION_REMINDER": {
+      "title": "Aanwezigheid afronden",
+      "body": "{{title}} ({{date}}) wacht op afronding."
+    }
+  },
+  "status": {
+    "ATTENDING": "aangemeld",
+    "NOT_ATTENDING": "afgemeld"
+  }
+}

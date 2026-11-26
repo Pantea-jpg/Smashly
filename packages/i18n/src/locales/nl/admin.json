@@ -1,0 +1,48 @@
+{
+  "users": {
+    "search": "Zoek op naam of e-mail",
+    "empty": "Geen gebruikers gevonden",
+    "filters": {
+      "all": "Alle",
+      "ACTIVE": "Actief",
+      "PENDING_APPROVAL": "In afwachting",
+      "INACTIVE": "Inactief"
+    },
+    "total_one": "{{count}} gebruiker",
+    "total_other": "{{count}} gebruikers"
+  },
+  "status": {
+    "ACTIVE": "Actief",
+    "INACTIVE": "Inactief",
+    "PENDING_APPROVAL": "Wacht op goedkeuring"
+  },
+  "detail": {
+    "balance": "Saldo",
+    "debt": "Openstaande schuld",
+    "email": "E-mail",
+    "phone": "Telefoon",
+    "language": "Taal",
+    "registered": "Geregistreerd",
+    "lastLogin": "Laatst ingelogd",
+    "never": "Nooit",
+    "unverified": "E-mailadres niet bevestigd",
+    "deleted": "Account verwijderd"
+  },
+  "actions": {
+    "viewAs": "Bekijken als gebruiker",
+    "activate": "Account activeren",
+    "deactivate": "Account deactiveren",
+    "approve": "Account goedkeuren",
+    "reasonLabel": "Reden (wordt vastgelegd in het auditlogboek)",
+    "confirmDeactivateTitle": "{{name}} deactiveren?",
+    "confirmDeactivateBody": "Diegene wordt op alle apparaten uitgelogd en kan pas weer inloggen als het account opnieuw is geactiveerd.",
+    "confirmActivateTitle": "{{name}} activeren?",
+    "confirmActivateBody": "Diegene kan dan inloggen.",
+    "done": "Status bijgewerkt."
+  },
+  "viewAs": {
+    "banner": "Bekijken als {{name}} · Alleen-lezen",
+    "exit": "Sluiten",
+    "readOnly": "Alleen-lezen: wijzigen is uitgeschakeld tijdens het bekijken als gebruiker."
+  }
+}

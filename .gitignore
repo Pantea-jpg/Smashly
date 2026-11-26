@@ -1,0 +1,23 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+
+# Generated
+apps/api/src/generated/
+
+# Expo / native
+.expo/
+apps/mobile/ios/
+apps/mobile/android/
+*.p8
+*.p12
+*.mobileprovision
+*.jks
+*.key
+*.pem

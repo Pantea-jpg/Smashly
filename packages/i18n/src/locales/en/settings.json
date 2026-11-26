@@ -1,0 +1,18 @@
+{
+  "title": "Settings",
+  "language": {
+    "title": "Language",
+    "en": "English",
+    "nl": "Nederlands"
+  },
+  "appearance": {
+    "title": "Appearance",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "account": {
+    "title": "Account",
+    "unverified": "Your email address is not confirmed yet. Check your inbox."
+  }
+}

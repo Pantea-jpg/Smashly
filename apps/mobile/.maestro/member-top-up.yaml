@@ -1,0 +1,45 @@
+# Member: top up €10 with Stripe's published TEST card in the PaymentSheet.
+# Only against a development or staging API with Stripe TEST keys (sk_test_…); never production.
+# The Stripe CLI (stripe listen) must forward webhooks, or the payment stays "confirming".
+appId: com.trainingwallet.app
+name: Member top-up (Stripe test mode)
+tags: [member, stripe]
+---
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      EMAIL: ${MEMBER_EMAIL}
+      PASSWORD: ${MEMBER_PASSWORD}
+- extendedWaitUntil:
+    visible:
+      id: home-top-up
+    timeout: 20000
+- tapOn:
+    id: home-top-up
+- assertVisible:
+    id: top-up-screen
+- tapOn:
+    id: preset-1000
+- tapOn:
+    id: top-up-pay
+# Stripe PaymentSheet (native UI, matched by its visible labels).
+- extendedWaitUntil:
+    visible: 'Card number'
+    timeout: 20000
+- tapOn: 'Card number'
+- inputText: '4242424242424242'
+- inputText: '1234'
+- inputText: '123'
+- runFlow:
+    when:
+      visible: 'ZIP'
+    commands:
+      - tapOn: 'ZIP'
+      - inputText: '12345'
+- hideKeyboard
+- tapOn:
+    text: 'Pay.*'
+- extendedWaitUntil:
+    visible:
+      id: top-up-success
+    timeout: 45000

@@ -1,0 +1,17 @@
+{
+  "appName": "Training Wallet",
+  "actions": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "retry": "Try again",
+    "close": "Close",
+    "signOut": "Sign out"
+  },
+  "states": {
+    "loading": "Loading…",
+    "empty": "Nothing here yet",
+    "offline": "You're offline"
+  },
+  "comingSoon": "This screen is part of an upcoming phase."
+}

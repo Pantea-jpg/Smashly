@@ -1,0 +1,36 @@
+# Member: open the next training, say "I'm coming", then change it to "Not coming".
+# Needs at least one upcoming training whose reservation deadline has not passed.
+appId: com.trainingwallet.app
+name: Member reserves a training
+tags: [smoke, member]
+---
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      EMAIL: ${MEMBER_EMAIL}
+      PASSWORD: ${MEMBER_PASSWORD}
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 20000
+- tapOn:
+    id: tab-trainings
+- extendedWaitUntil:
+    visible:
+      id: 'training-.*'
+    timeout: 10000
+- tapOn:
+    id: 'training-.*'
+    index: 0
+- assertVisible:
+    id: training-detail
+- tapOn:
+    id: reserve-attending
+- assertVisible:
+    id: training-state
+- tapOn:
+    id: reserve-not-attending
+- assertVisible:
+    id: training-state
+- assertNotVisible:
+    id: error-state

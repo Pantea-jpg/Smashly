@@ -1,0 +1,19 @@
+{
+  "name": "@tw/i18n",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@tw/config": "workspace:*",
+    "@tw/contracts": "workspace:*",
+    "vitest": "5.1.1"
+  }
+}

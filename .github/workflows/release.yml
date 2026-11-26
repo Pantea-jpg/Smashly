@@ -1,0 +1,73 @@
+name: Release to production
+
+# Triggered by pushing a version tag, e.g.  git tag v1.0.0 && git push origin v1.0.0
+#   1. full CI on the tagged commit (tests, coverage floors, secrets scan, image + migrations)
+#   2. waits for approval: the `production` GitHub environment requires a reviewer
+#   3. deploys the API first; Render runs `prisma migrate deploy` before new instances start
+#   4. once the API reports the new commit, deploys the worker (it never runs ahead of migrations)
+#   5. read-only smoke test against production, then a Sentry release (if configured)
+#
+# Repository settings needed (docs/09-deployment.md):
+#   environment `production` with required reviewers, and in it:
+#     secrets  RENDER_DEPLOY_HOOK_API, RENDER_DEPLOY_HOOK_WORKER   (Render → service → Settings → Deploy Hook)
+#     variable PRODUCTION_API_URL                                   (e.g. https://api.example.com)
+#     optional SENTRY_AUTH_TOKEN (secret), SENTRY_ORG and SENTRY_PROJECT (variables)
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-production
+  cancel-in-progress: false # never interrupt a production deploy
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment:
+      name: production
+      url: ${{ vars.PRODUCTION_API_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Deploy the API (migrations run first, as Render's pre-deploy step)
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_API }}
+        run: |
+          test -n "$HOOK" || { echo "::error::RENDER_DEPLOY_HOOK_API is not set"; exit 1; }
+          curl --fail-with-body -sS -X POST "$HOOK&ref=$GITHUB_SHA"
+
+      - name: Wait until the API serves the new commit
+        run: node scripts/smoke-test.mjs "${{ vars.PRODUCTION_API_URL }}" "$GITHUB_SHA" --wait 1500
+
+      - name: Deploy the worker
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_WORKER }}
+        run: |
+          test -n "$HOOK" || { echo "::error::RENDER_DEPLOY_HOOK_WORKER is not set"; exit 1; }
+          curl --fail-with-body -sS -X POST "$HOOK&ref=$GITHUB_SHA"
+
+      - name: Create the Sentry release
+        if: vars.SENTRY_ORG != ''
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+          SENTRY_URL: https://de.sentry.io/ # EU data region
+        run: |
+          VERSION="${GITHUB_SHA::12}"
+          npx --yes @sentry/cli@2 releases new "$VERSION"
+          npx --yes @sentry/cli@2 releases set-commits "$VERSION" --auto --ignore-missing
+          npx --yes @sentry/cli@2 releases deploys "$VERSION" new -e production
+          npx --yes @sentry/cli@2 releases finalize "$VERSION"

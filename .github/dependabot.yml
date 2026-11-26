@@ -1,0 +1,37 @@
+# Weekly update pull requests (Phase 9 recommendation, docs/06-security-review.md).
+# Security fixes arrive as soon as an advisory is published, independent of this schedule.
+# Every update PR runs the full CI (tests, coverage floors, audit) before it can be merged.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      # Expo SDK packages must move together (expo install keeps them compatible).
+      expo:
+        patterns:
+          ['expo', 'expo-*', '@expo/*', 'react-native', 'react-native-*', 'react', 'jest-expo']
+      prisma:
+        patterns: ['prisma', '@prisma/*']
+      dev-tooling:
+        dependency-type: development
+        update-types: [minor, patch]
+    ignore:
+      # Major versions of the Expo SDK and React Native are upgraded deliberately (one SDK at a time).
+      - dependency-name: 'expo'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-native'
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /apps/api
+    schedule:
+      interval: weekly

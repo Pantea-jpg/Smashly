@@ -1,0 +1,53 @@
+# Member: sign in, see the balance on Home, open the wallet history and one transaction,
+# scroll the history (loads the next page), then sign out.
+appId: com.trainingwallet.app
+name: Member wallet and history
+tags: [smoke, member]
+---
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      EMAIL: ${MEMBER_EMAIL}
+      PASSWORD: ${MEMBER_PASSWORD}
+- extendedWaitUntil:
+    visible:
+      id: home-balance
+    timeout: 20000
+- runFlow:
+    when:
+      visible:
+        id: push-prompt
+    commands:
+      - tapOn:
+          id: push-prompt-dismiss
+- tapOn:
+    id: tab-wallet
+- assertVisible:
+    id: wallet-balance
+- scrollUntilVisible:
+    element:
+      id: 'tx-.*'
+    direction: DOWN
+- tapOn:
+    id: 'tx-.*'
+    index: 0
+- assertVisible:
+    id: transaction-detail
+- back
+# Long histories load page by page while scrolling.
+- scroll
+- scroll
+- scroll
+- assertNotVisible:
+    id: error-state
+- tapOn:
+    id: tab-profile
+- scrollUntilVisible:
+    element:
+      id: sign-out
+- tapOn:
+    id: sign-out
+- extendedWaitUntil:
+    visible:
+      id: login-screen
+    timeout: 10000
